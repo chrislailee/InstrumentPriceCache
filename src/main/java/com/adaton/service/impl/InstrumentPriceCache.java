@@ -7,63 +7,73 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 public class InstrumentPriceCache implements IInstrumentPriceCache {
 
-    // Price date, instrument ID, list of prices for each vendor
-    final private ConcurrentHashMap<LocalDate, ConcurrentHashMap<String, ConcurrentHashMap<String, InstrumentPrice>>> cachedPricesByInstrument;
-    // Price date, vendor ID, list of prices for each instrument
-    final private ConcurrentHashMap<LocalDate, ConcurrentHashMap<String, ConcurrentHashMap<String, InstrumentPrice>>> cachedPricesByVendor;
+    private static final int MAX_DAY_COUNT = 30;
+
+    // Sorted map with price date as key and cache indices as value that supports concureent access
+    private final ConcurrentSkipListMap<LocalDate, CacheIndicesForDay> cacheIndicesByDate;
 
     public InstrumentPriceCache() {
-        this.cachedPricesByInstrument = new ConcurrentHashMap<>();
-        this.cachedPricesByVendor = new ConcurrentHashMap<>();
+        this.cacheIndicesByDate = new ConcurrentSkipListMap<>();
     }
 
     @Override
     public void publishInstrumentPrice(InstrumentPrice instrumentPrice) {
-        cachedPricesByInstrument.compute(
+        if (cacheIndicesByDate.size() >= MAX_DAY_COUNT &&
+            ! cacheIndicesByDate.containsKey(instrumentPrice.priceDate())) {
+            // If the cache has reached MAX_DAY_COUNT and the cache does not contain the new price date to be
+            // published, an existing date needs to be evicted from the cache to make room for the new date.
+            cacheIndicesByDate.remove(
+                    cacheIndicesByDate.firstKey()
+            );
+        }
+
+        cacheIndicesByDate.compute(
                 instrumentPrice.priceDate(),
-                (date, pricesForDate) -> {
-                    if (pricesForDate == null) {
-                        pricesForDate = new ConcurrentHashMap<>();
+                (date, cacheIndicesByDate) -> {
+                    if (cacheIndicesByDate == null) {
+                        cacheIndicesByDate =
+                                new CacheIndicesForDay(
+                                        new ConcurrentHashMap<>(),
+                                        new ConcurrentHashMap<>()
+                                );
                     }
 
-                    pricesForDate.compute(
+                    updateCacheIndex(
+                            cacheIndicesByDate.cachedPricesByInstrument(),
                             instrumentPrice.instrumentId(),
-                            (instrumentId_, vendorPricesForInstr) -> {
-                                if (vendorPricesForInstr == null) {
-                                    vendorPricesForInstr = new ConcurrentHashMap<>();
-                                }
-                                vendorPricesForInstr.put(instrumentPrice.vendorId(), instrumentPrice);
-                                return vendorPricesForInstr;
-                            }
+                            instrumentPrice.vendorId(),
+                            instrumentPrice
+                    );
+                    updateCacheIndex(
+                            cacheIndicesByDate.cachedPricesByVendor(),
+                            instrumentPrice.vendorId(),
+                            instrumentPrice.instrumentId(),
+                            instrumentPrice
                     );
 
-                    return pricesForDate;
+                    return cacheIndicesByDate;
                 }
         );
+    }
 
-        cachedPricesByVendor.compute(
-                instrumentPrice.priceDate(),
-                (date, pricesForDate) -> {
-                    if (pricesForDate == null) {
-                        pricesForDate = new ConcurrentHashMap<>();
-                    }
-
-                    pricesForDate.compute(
-                            instrumentPrice.vendorId(),
-                            (vendorId_, instrumentPricesForVendor) -> {
-                                if (instrumentPricesForVendor == null) {
-                                    instrumentPricesForVendor = new ConcurrentHashMap<>();
-                                }
-                                instrumentPricesForVendor.put(instrumentPrice.instrumentId(), instrumentPrice);
-                                return instrumentPricesForVendor;
-                            }
-                    );
-
-                    return pricesForDate;
+    private void updateCacheIndex(
+            ConcurrentHashMap<String, ConcurrentHashMap<String, InstrumentPrice>> cacheIndex,
+            String outerKey,
+            String innerKey,
+            InstrumentPrice instrumentPrice) {
+        cacheIndex.compute(
+            outerKey,
+            (oldKey_, instrumentPrices) -> {
+                if (instrumentPrices == null) {
+                    instrumentPrices = new ConcurrentHashMap<>();
                 }
+                instrumentPrices.put(innerKey, instrumentPrice);
+                return instrumentPrices;
+            }
         );
     }
 
@@ -76,8 +86,8 @@ public class InstrumentPriceCache implements IInstrumentPriceCache {
 
     @Override
     public Map<String, InstrumentPrice> getInstrumentPrice(String instrumentId, LocalDate priceDate) {
-        if (cachedPricesByInstrument.containsKey(priceDate)) {
-            final var pricesForDate = cachedPricesByInstrument.get(priceDate);
+        if (cacheIndicesByDate.containsKey(priceDate)) {
+            final var pricesForDate = cacheIndicesByDate.get(priceDate).cachedPricesByInstrument();
             if (pricesForDate.containsKey(instrumentId)) {
                 return pricesForDate.get(instrumentId);
             }
@@ -92,8 +102,8 @@ public class InstrumentPriceCache implements IInstrumentPriceCache {
 
     @Override
     public Map<String, InstrumentPrice> getAllInstrumentPricesForVendor(String vendorId, LocalDate priceDate) {
-        if (cachedPricesByVendor.containsKey(priceDate)) {
-            final var pricesForDate = cachedPricesByVendor.get(priceDate);
+        if (cacheIndicesByDate.containsKey(priceDate)) {
+            final var pricesForDate = cacheIndicesByDate.get(priceDate).cachedPricesByVendor();
             if (pricesForDate.containsKey(vendorId)) {
                 return pricesForDate.get(vendorId);
             }
