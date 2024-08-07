@@ -4,6 +4,7 @@ import com.adaton.model.InstrumentPrice;
 import com.adaton.service.IInstrumentPriceCache;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -20,34 +21,21 @@ public class InstrumentPriceCache implements IInstrumentPriceCache {
     }
 
     @Override
-    public void publishInstrumentPrice(
-            String vendorId,
-            String instrumentId,
-            LocalDate priceDate,
-            Double price) {
-
-        final InstrumentPrice instrumentPrice =
-                new InstrumentPrice(
-                        vendorId,
-                        instrumentId,
-                        priceDate,
-                        price
-                );
-
+    public void publishInstrumentPrice(InstrumentPrice instrumentPrice) {
         cachedPricesByInstrument.compute(
-                priceDate,
+                instrumentPrice.priceDate(),
                 (date, pricesForDate) -> {
                     if (pricesForDate == null) {
                         pricesForDate = new ConcurrentHashMap<>();
                     }
 
                     pricesForDate.compute(
-                            instrumentId,
+                            instrumentPrice.instrumentId(),
                             (instrumentId_, vendorPricesForInstr) -> {
                                 if (vendorPricesForInstr == null) {
                                     vendorPricesForInstr = new ConcurrentHashMap<>();
                                 }
-                                vendorPricesForInstr.put(vendorId, instrumentPrice);
+                                vendorPricesForInstr.put(instrumentPrice.vendorId(), instrumentPrice);
                                 return vendorPricesForInstr;
                             }
                     );
@@ -57,19 +45,19 @@ public class InstrumentPriceCache implements IInstrumentPriceCache {
         );
 
         cachedPricesByVendor.compute(
-                priceDate,
+                instrumentPrice.priceDate(),
                 (date, pricesForDate) -> {
                     if (pricesForDate == null) {
                         pricesForDate = new ConcurrentHashMap<>();
                     }
 
                     pricesForDate.compute(
-                            vendorId,
+                            instrumentPrice.vendorId(),
                             (vendorId_, instrumentPricesForVendor) -> {
                                 if (instrumentPricesForVendor == null) {
                                     instrumentPricesForVendor = new ConcurrentHashMap<>();
                                 }
-                                instrumentPricesForVendor.put(instrumentId, instrumentPrice);
+                                instrumentPricesForVendor.put(instrumentPrice.instrumentId(), instrumentPrice);
                                 return instrumentPricesForVendor;
                             }
                     );
@@ -77,6 +65,13 @@ public class InstrumentPriceCache implements IInstrumentPriceCache {
                     return pricesForDate;
                 }
         );
+    }
+
+    @Override
+    public void publishInstrumentPrices(Collection<InstrumentPrice> instrumentPrices) {
+        for (InstrumentPrice instrumentPrice : instrumentPrices) {
+            publishInstrumentPrice(instrumentPrice);
+        }
     }
 
     @Override
