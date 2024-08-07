@@ -26,9 +26,17 @@ public class InstrumentPriceCache implements IInstrumentPriceCache {
             ! cacheIndicesByDate.containsKey(instrumentPrice.priceDate())) {
             // If the cache has reached MAX_DAY_COUNT and the cache does not contain the new price date to be
             // published, an existing date needs to be evicted from the cache to make room for the new date.
-            cacheIndicesByDate.remove(
-                    cacheIndicesByDate.firstKey()
-            );
+            final LocalDate earliestDateInCache = cacheIndicesByDate.firstKey();
+            if (earliestDateInCache.isBefore(instrumentPrice.priceDate())) {
+                // If the earliest date in the cache is older than the new price date to be published,
+                // evict the old date.
+                cacheIndicesByDate.remove(earliestDateInCache);
+            }
+            else {
+                // Else, the new price date to be published is somehow older than the earliest date in the cache,
+                // the new price date is ignored.
+                return;
+            }
         }
 
         cacheIndicesByDate.compute(

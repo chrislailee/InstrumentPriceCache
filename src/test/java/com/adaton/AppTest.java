@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -141,8 +142,8 @@ public class AppTest {
         // Publish multiple instrument prices for multiple vendors across different dates
         instrumentPriceCache.publishInstrumentPrices(
                 List.of(
-                    testV1I1Today, testV1I2Today, testV2I1Today, testV2I2Today,
-                    testV1I1Yesterday, testV1I2Yesterday, testV2I1Yesterday, testV2I2Yesterday
+                        testV1I1Today, testV1I2Today, testV2I1Today, testV2I2Today,
+                        testV1I1Yesterday, testV1I2Yesterday, testV2I1Yesterday, testV2I2Yesterday
                 )
         );
 
@@ -165,6 +166,83 @@ public class AppTest {
         testRetrieveByVendorId(instrumentPriceCache, testV1I2Yesterday, 2);
         testRetrieveByVendorId(instrumentPriceCache, testV2I1Yesterday, 2);
         testRetrieveByVendorId(instrumentPriceCache, testV2I2Yesterday, 2);
+    }
+
+    @Test
+    public void testMaxCachedDays() {
+        final var instrumentPriceCache = getCacheInstance();
+
+        // Create 31 days of test records
+        final List<InstrumentPrice> testRecords31Days =
+            IntStream.range(0, 31)
+                .mapToObj(dayIndex -> new InstrumentPrice("Vendor 1", "Instrument 1", LocalDate.now().minusDays(dayIndex), 100.0d + dayIndex))
+                .toList();
+        final List<InstrumentPrice> testRecords30Days = testRecords31Days.subList(0, 30);
+
+        // Publish the first 30 days of prices
+        instrumentPriceCache.publishInstrumentPrices(testRecords30Days);
+
+        // Cache should contain exactly 30 days of prices
+        for (InstrumentPrice instrumentPrice : testRecords30Days) {
+            // Cached prices should match with test record for all days
+            testRetrieveByInstrumentId(instrumentPriceCache, instrumentPrice, 1);
+        }
+
+        // Publish all 31 days of prices (the earliest day should be evicted)
+        instrumentPriceCache.publishInstrumentPrices(testRecords31Days);
+
+        // Cache should still contain exactly 30 days of prices
+        for (InstrumentPrice instrumentPrice : testRecords31Days.subList(0, 30)) {
+            // Cached prices should match with test record for all days
+            testRetrieveByInstrumentId(instrumentPriceCache, instrumentPrice, 1);
+        }
+
+        // Record for the earliest date should be evicted
+        final InstrumentPrice evictedDay = testRecords31Days.getLast();
+
+        Map<String, InstrumentPrice> nonExistDate =
+                instrumentPriceCache.getInstrumentPrice(evictedDay.instrumentId(), evictedDay.priceDate());
+        assertNotNull(nonExistDate);
+        assertEquals(0, nonExistDate.size());
+
+        nonExistDate =
+                instrumentPriceCache.getAllInstrumentPricesForVendor(evictedDay.vendorId(), evictedDay.priceDate());
+        assertNotNull(nonExistDate);
+        assertEquals(0, nonExistDate.size());
+    }
+
+    @Test
+    public void testMaxCachedDaysWithInversePublicationOrder() {
+        final var instrumentPriceCache = getCacheInstance();
+
+        // Create 31 days of test records
+        final List<InstrumentPrice> testRecords31DaysReversed =
+                IntStream.range(0, 31)
+                        .mapToObj(dayIndex -> new InstrumentPrice("Vendor 1", "Instrument 1", LocalDate.now().minusDays(dayIndex), 100.0d + dayIndex))
+                        .toList()
+                        .reversed();
+
+        // Publish all 31 days of prices (the earliest day should be evicted)
+        instrumentPriceCache.publishInstrumentPrices(testRecords31DaysReversed);
+
+        // Cache should still contain exactly 30 days of prices
+        for (InstrumentPrice instrumentPrice : testRecords31DaysReversed.subList(1, 31)) {
+            // Cached prices should match with test record for all days
+            testRetrieveByInstrumentId(instrumentPriceCache, instrumentPrice, 1);
+        }
+
+        // Record for the earliest date should be evicted
+        final InstrumentPrice evictedDay = testRecords31DaysReversed.getFirst();
+
+        Map<String, InstrumentPrice> nonExistDate =
+                instrumentPriceCache.getInstrumentPrice(evictedDay.instrumentId(), evictedDay.priceDate());
+        assertNotNull(nonExistDate);
+        assertEquals(0, nonExistDate.size());
+
+        nonExistDate =
+                instrumentPriceCache.getAllInstrumentPricesForVendor(evictedDay.vendorId(), evictedDay.priceDate());
+        assertNotNull(nonExistDate);
+        assertEquals(0, nonExistDate.size());
     }
 
 }
