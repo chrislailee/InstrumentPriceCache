@@ -17,14 +17,14 @@ public class AppTest {
         return new InstrumentPriceCache();
     }
 
-    private InstrumentPrice testV1I1Today = new InstrumentPrice("Vendor 1", "Instrument 1", LocalDate.now(), 100.0d);
-    private InstrumentPrice testV1I2Today = new InstrumentPrice("Vendor 1", "Instrument 2", LocalDate.now(), 200.0d);
-    private InstrumentPrice testV2I1Today = new InstrumentPrice("Vendor 2", "Instrument 1", LocalDate.now(), 110.0d);
-    private InstrumentPrice testV2I2Today = new InstrumentPrice("Vendor 2", "Instrument 2", LocalDate.now(), 210.0d);
-    private InstrumentPrice testV1I1Yesterday = new InstrumentPrice("Vendor 1", "Instrument 1", LocalDate.now().minusDays(1L), 90.0d);
-    private InstrumentPrice testV1I2Yesterday = new InstrumentPrice("Vendor 1", "Instrument 2", LocalDate.now().minusDays(1L), 190.0d);
-    private InstrumentPrice testV2I1Yesterday = new InstrumentPrice("Vendor 2", "Instrument 1", LocalDate.now().minusDays(1L), 105.0d);
-    private InstrumentPrice testV2I2Yesterday = new InstrumentPrice("Vendor 2", "Instrument 2", LocalDate.now().minusDays(1L), 205.0d);
+    private final InstrumentPrice testV1I1Today = new InstrumentPrice("Vendor 1", "Instrument 1", LocalDate.now(), 100.0d);
+    private final InstrumentPrice testV1I2Today = new InstrumentPrice("Vendor 1", "Instrument 2", LocalDate.now(), 200.0d);
+    private final InstrumentPrice testV2I1Today = new InstrumentPrice("Vendor 2", "Instrument 1", LocalDate.now(), 110.0d);
+    private final InstrumentPrice testV2I2Today = new InstrumentPrice("Vendor 2", "Instrument 2", LocalDate.now(), 210.0d);
+    private final InstrumentPrice testV1I1Yesterday = new InstrumentPrice("Vendor 1", "Instrument 1", LocalDate.now().minusDays(1L), 90.0d);
+    private final InstrumentPrice testV1I2Yesterday = new InstrumentPrice("Vendor 1", "Instrument 2", LocalDate.now().minusDays(1L), 190.0d);
+    private final InstrumentPrice testV2I1Yesterday = new InstrumentPrice("Vendor 2", "Instrument 1", LocalDate.now().minusDays(1L), 105.0d);
+    private final InstrumentPrice testV2I2Yesterday = new InstrumentPrice("Vendor 2", "Instrument 2", LocalDate.now().minusDays(1L), 205.0d);
 
     private void testRetrieveByInstrumentId(IInstrumentPriceCache instrumentPriceCache, InstrumentPrice retrievalObj, int expectedRecordCount) {
         final Map<String, InstrumentPrice> instrumentPrices =

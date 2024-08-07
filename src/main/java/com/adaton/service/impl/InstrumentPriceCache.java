@@ -11,9 +11,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class InstrumentPriceCache implements IInstrumentPriceCache {
 
     // Price date, instrument ID, list of prices for each vendor
-    private ConcurrentHashMap<LocalDate, ConcurrentHashMap<String, ConcurrentHashMap<String, InstrumentPrice>>> cachedPricesByInstrument;
+    final private ConcurrentHashMap<LocalDate, ConcurrentHashMap<String, ConcurrentHashMap<String, InstrumentPrice>>> cachedPricesByInstrument;
     // Price date, vendor ID, list of prices for each instrument
-    private ConcurrentHashMap<LocalDate, ConcurrentHashMap<String, ConcurrentHashMap<String, InstrumentPrice>>> cachedPricesByVendor;
+    final private ConcurrentHashMap<LocalDate, ConcurrentHashMap<String, ConcurrentHashMap<String, InstrumentPrice>>> cachedPricesByVendor;
 
     public InstrumentPriceCache() {
         this.cachedPricesByInstrument = new ConcurrentHashMap<>();

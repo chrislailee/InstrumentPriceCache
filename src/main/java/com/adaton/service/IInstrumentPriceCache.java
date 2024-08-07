@@ -24,7 +24,7 @@ public interface IInstrumentPriceCache {
 
     /**
      * Retrieve all instrument prices stored in the cache for the specified instrument ID.
-     * There could be more than one record for a specified instrument ID if there are more than one
+     * There could be more than one record for a specified instrument ID if there is more than one
      * vendor that provides prices for the instrument.
      *
      * @param instrumentId Instrument ID for which price is to be retrieved.
