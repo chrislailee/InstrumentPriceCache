@@ -65,10 +65,10 @@ public class AppTest {
         // Publish single instrument price for a single vendor
         instrumentPriceCache.publishInstrumentPrice(testV1I1Today);
 
-        // Retrieve the price by instrument ID
+        // Retrieve price by instrument ID
         testRetrieveByInstrumentId(instrumentPriceCache, testV1I1Today, 1);
 
-        // Retrieve the price by vendor ID
+        // Retrieve price by vendor ID
         testRetrieveByVendorId(instrumentPriceCache, testV1I1Today, 1);
 
         // Retrieve for a non-existent date
@@ -103,11 +103,11 @@ public class AppTest {
         instrumentPriceCache.publishInstrumentPrice(testV1I1Today);
         instrumentPriceCache.publishInstrumentPrice(testV1I2Today);
 
-        // Retrieve the price by instrument ID
+        // Retrieve price by instrument ID
         testRetrieveByInstrumentId(instrumentPriceCache, testV1I1Today, 1);
         testRetrieveByInstrumentId(instrumentPriceCache, testV1I2Today, 1);
 
-        // Retrieve the price by vendor ID
+        // Retrieve prices by vendor ID
         testRetrieveByVendorId(instrumentPriceCache, testV1I1Today, 2);
         testRetrieveByVendorId(instrumentPriceCache, testV1I2Today, 2);
     }
@@ -116,18 +116,18 @@ public class AppTest {
     public void testMultipleVendorsMultipleInstrumentPricesPublication() {
         final var instrumentPriceCache = getCacheInstance();
 
-        // Publish multiple instrument prices for a single vendor
+        // Publish multiple instrument prices for multiple vendors
         instrumentPriceCache.publishInstrumentPrices(
                 List.of(testV1I1Today, testV1I2Today, testV2I1Today, testV2I2Today)
         );
 
-        // Retrieve the price by instrument ID
+        // Retrieve prices by instrument ID
         testRetrieveByInstrumentId(instrumentPriceCache, testV1I1Today, 2);
         testRetrieveByInstrumentId(instrumentPriceCache, testV1I2Today, 2);
         testRetrieveByInstrumentId(instrumentPriceCache, testV2I1Today, 2);
         testRetrieveByInstrumentId(instrumentPriceCache, testV2I2Today, 2);
 
-        // Retrieve the price by vendor ID
+        // Retrieve prices by vendor ID
         testRetrieveByVendorId(instrumentPriceCache, testV1I1Today, 2);
         testRetrieveByVendorId(instrumentPriceCache, testV1I2Today, 2);
         testRetrieveByVendorId(instrumentPriceCache, testV2I1Today, 2);
@@ -138,7 +138,7 @@ public class AppTest {
     public void testMultipleVendorsMultipleInstrumentsMultipleDaysPublication() {
         final var instrumentPriceCache = getCacheInstance();
 
-        // Publish multiple instrument prices for a single vendor
+        // Publish multiple instrument prices for multiple vendors across different dates
         instrumentPriceCache.publishInstrumentPrices(
                 List.of(
                     testV1I1Today, testV1I2Today, testV2I1Today, testV2I2Today,
@@ -146,7 +146,7 @@ public class AppTest {
                 )
         );
 
-        // Retrieve the price by instrument ID
+        // Retrieve prices by instrument ID
         testRetrieveByInstrumentId(instrumentPriceCache, testV1I1Today, 2);
         testRetrieveByInstrumentId(instrumentPriceCache, testV1I2Today, 2);
         testRetrieveByInstrumentId(instrumentPriceCache, testV2I1Today, 2);
@@ -156,7 +156,7 @@ public class AppTest {
         testRetrieveByInstrumentId(instrumentPriceCache, testV2I1Yesterday, 2);
         testRetrieveByInstrumentId(instrumentPriceCache, testV2I2Yesterday, 2);
 
-        // Retrieve the price by vendor ID
+        // Retrieve prices by vendor ID
         testRetrieveByVendorId(instrumentPriceCache, testV1I1Today, 2);
         testRetrieveByVendorId(instrumentPriceCache, testV1I2Today, 2);
         testRetrieveByVendorId(instrumentPriceCache, testV2I1Today, 2);
