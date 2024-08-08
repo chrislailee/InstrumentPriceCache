@@ -1,13 +1,13 @@
 package com.adaton.service.impl;
 
 import com.adaton.model.InstrumentPrice;
+import com.adaton.persistence.impl.CacheIndex;
 import com.adaton.service.IInstrumentPriceCache;
 
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 public class InstrumentPriceCache implements IInstrumentPriceCache {
@@ -45,44 +45,27 @@ public class InstrumentPriceCache implements IInstrumentPriceCache {
                 (date, cacheIndicesByDate) -> {
                     if (cacheIndicesByDate == null) {
                         cacheIndicesByDate =
-                                new CacheIndicesForDay(
-                                        new ConcurrentHashMap<>(),
-                                        new ConcurrentHashMap<>()
-                                );
+                            new CacheIndicesForDay(
+                                new CacheIndex(),
+                                new CacheIndex()
+                            );
                     }
 
-                    updateCacheIndex(
-                            cacheIndicesByDate.cachedPricesByInstrument(),
+                    cacheIndicesByDate.cachedPricesByInstrument()
+                        .updateCacheIndex(
                             instrumentPrice.instrumentId(),
                             instrumentPrice.vendorId(),
                             instrumentPrice
-                    );
-                    updateCacheIndex(
-                            cacheIndicesByDate.cachedPricesByVendor(),
+                        );
+                    cacheIndicesByDate.cachedPricesByVendor()
+                        .updateCacheIndex(
                             instrumentPrice.vendorId(),
                             instrumentPrice.instrumentId(),
                             instrumentPrice
-                    );
+                        );
 
                     return cacheIndicesByDate;
                 }
-        );
-    }
-
-    private void updateCacheIndex(
-            ConcurrentHashMap<String, ConcurrentHashMap<String, InstrumentPrice>> cacheIndex,
-            String outerKey,
-            String innerKey,
-            InstrumentPrice instrumentPrice) {
-        cacheIndex.compute(
-            outerKey,
-            (oldKey_, instrumentPrices) -> {
-                if (instrumentPrices == null) {
-                    instrumentPrices = new ConcurrentHashMap<>();
-                }
-                instrumentPrices.put(innerKey, instrumentPrice);
-                return instrumentPrices;
-            }
         );
     }
 
@@ -97,12 +80,7 @@ public class InstrumentPriceCache implements IInstrumentPriceCache {
     public Map<String, InstrumentPrice> getInstrumentPrice(String instrumentId, LocalDate priceDate) {
         if (cacheIndicesByDate.containsKey(priceDate)) {
             final var pricesForDate = cacheIndicesByDate.get(priceDate).cachedPricesByInstrument();
-            if (pricesForDate.containsKey(instrumentId)) {
-                return Collections.unmodifiableMap(pricesForDate.get(instrumentId));
-            }
-            else {
-                return Collections.emptyMap();
-            }
+            return pricesForDate.getCachedInstrumentPrices(instrumentId);
         }
         else {
             return Collections.emptyMap();
@@ -113,12 +91,7 @@ public class InstrumentPriceCache implements IInstrumentPriceCache {
     public Map<String, InstrumentPrice> getAllInstrumentPricesForVendor(String vendorId, LocalDate priceDate) {
         if (cacheIndicesByDate.containsKey(priceDate)) {
             final var pricesForDate = cacheIndicesByDate.get(priceDate).cachedPricesByVendor();
-            if (pricesForDate.containsKey(vendorId)) {
-                return Collections.unmodifiableMap(pricesForDate.get(vendorId));
-            }
-            else {
-                return Collections.emptyMap();
-            }
+            return pricesForDate.getCachedInstrumentPrices(vendorId);
         }
         else {
             return Collections.emptyMap();

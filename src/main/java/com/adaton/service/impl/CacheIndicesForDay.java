@@ -1,15 +1,14 @@
 package com.adaton.service.impl;
 
-import com.adaton.model.InstrumentPrice;
+import com.adaton.persistence.ICacheIndex;
 
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 
 public record CacheIndicesForDay(
         // Map of [Instrument ID --> Map of [Vendor ID --> Price]]
-        ConcurrentHashMap<String, ConcurrentHashMap<String, InstrumentPrice>> cachedPricesByInstrument,
+        ICacheIndex cachedPricesByInstrument,
         // Map of [Vendor ID --> Map of [Instrument ID --> Price]]
-        ConcurrentHashMap<String, ConcurrentHashMap<String, InstrumentPrice>> cachedPricesByVendor) {
+        ICacheIndex cachedPricesByVendor) {
 
     public CacheIndicesForDay {
         Objects.requireNonNull(cachedPricesByInstrument);
