@@ -5,6 +5,7 @@ import com.adaton.service.IInstrumentPriceCache;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -97,14 +98,14 @@ public class InstrumentPriceCache implements IInstrumentPriceCache {
         if (cacheIndicesByDate.containsKey(priceDate)) {
             final var pricesForDate = cacheIndicesByDate.get(priceDate).cachedPricesByInstrument();
             if (pricesForDate.containsKey(instrumentId)) {
-                return pricesForDate.get(instrumentId);
+                return Collections.unmodifiableMap(pricesForDate.get(instrumentId));
             }
             else {
-                return Map.of();
+                return Collections.emptyMap();
             }
         }
         else {
-            return Map.of();
+            return Collections.emptyMap();
         }
     }
 
@@ -113,14 +114,14 @@ public class InstrumentPriceCache implements IInstrumentPriceCache {
         if (cacheIndicesByDate.containsKey(priceDate)) {
             final var pricesForDate = cacheIndicesByDate.get(priceDate).cachedPricesByVendor();
             if (pricesForDate.containsKey(vendorId)) {
-                return pricesForDate.get(vendorId);
+                return Collections.unmodifiableMap(pricesForDate.get(vendorId));
             }
             else {
-                return Map.of();
+                return Collections.emptyMap();
             }
         }
         else {
-            return Map.of();
+            return Collections.emptyMap();
         }
     }
 
