@@ -15,25 +15,4 @@ public record CacheIndicesForDay(
         Objects.requireNonNull(cachedPricesByVendor);
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        CacheIndicesForDay that = (CacheIndicesForDay) o;
-        return Objects.equals(cachedPricesByVendor, that.cachedPricesByVendor) && Objects.equals(cachedPricesByInstrument, that.cachedPricesByInstrument);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(cachedPricesByInstrument, cachedPricesByVendor);
-    }
-
-    @Override
-    public String toString() {
-        return "CacheIndicesForDay{" +
-                "cachedPricesByInstrument=" + cachedPricesByInstrument +
-                ", cachedPricesByVendor=" + cachedPricesByVendor +
-                '}';
-    }
-
 }
