@@ -7,7 +7,7 @@ import java.util.Map;
 public interface ICacheIndex {
 
     /**
-     * Update the cache index. The index is organised according to a 2-layer associative maps:
+     * Update the cache index. The index is organised according to a 2-layer associative map:
      * Map of [Instrument ID --> Map of [Vendor ID --> Price]]
      * or
      * Map of [Vendor ID --> Map of [Instrument ID --> Price]]

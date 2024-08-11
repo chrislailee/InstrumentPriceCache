@@ -14,7 +14,7 @@ public class InstrumentPriceCache implements IInstrumentPriceCache {
 
     private static final int MAX_DAY_COUNT = 30;
 
-    // Sorted map with price date as key and cache indices as value that supports concureent access
+    // Sorted map with price date as key and cache indices as value that supports concurrent access
     private final ConcurrentSkipListMap<LocalDate, CacheIndicesForDay> cacheIndicesByDate;
 
     public InstrumentPriceCache() {
